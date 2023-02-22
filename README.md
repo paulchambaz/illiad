@@ -109,7 +109,7 @@ ufw allow 15000 # if you have a firewall
 
 Make sure to route your port 443 to your server on your router's firewall.
 
-This will allow you to query 'illiad.your-domain-name.com/audiobooks' from anywhere.
+This will allow you to query 'https://illiad.your-domain-name.com/audiobooks' from anywhere.
 
 ## Organization
 
@@ -186,13 +186,15 @@ sqlite3 database.sqlite "INSERT INTO accounts (user, password, key) VALUES ($use
 Where user is their username, password is their encrypted password (check with client for encryption method - odyssey uses mkpasswd with md5) and key is their api key. You can generate a key with ssl.
 
 ```bash
-mkpasswd -m md5 'your-password'
+mkpasswd -m md5 'your-password' # for the password
 openssl rand -base64 16 # for api key
 ```
 
 ### POST /login
 
 This endpoint allows you to recuperate a user's api key using a username and password. You will need this api key for all other connections with the database.
+
+For authentification you need to provide a header `Auth: your-api-key`.
 
 ## License
 
