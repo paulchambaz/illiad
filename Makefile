@@ -1,5 +1,4 @@
 illiad:
-	@rustup default stable
 	@cargo build --release
 
 install: illiad

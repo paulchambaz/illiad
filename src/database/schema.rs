@@ -166,17 +166,17 @@ pub async fn insert_position(
 ) -> Result<(), sqlx::Error> {
     // updating positions for the ones that already exist
 
-    let now = chrono::Local::now();
-    let iso_date_time = now.to_rcf3339();
+    // let now = chrono::Local::now();
+    // let iso_date_time = now.to_rcf3339();
 
     sqlx::query(
         r#"UPDATE positions
-        SET file = ?, position = ?, last_modified = ?
+        SET file = ?, position = ?
         WHERE hash = ? AND user = ?"#,
     )
     .bind(file.clone())
     .bind(position.clone())
-    .bind(iso_date_time)
+    // .bind(iso_date_time)
     .bind(hash.clone())
     .bind(user.clone())
     .execute(pool)
