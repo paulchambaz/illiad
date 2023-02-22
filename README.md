@@ -145,7 +145,9 @@ Please note that you do not need to do anything for your new books to be detecte
 
 ## Endpoints
 
-Here is a list of endpoints
+Here is a list of endpoints:
+
+**For authentification you need to provide a header `Auth: your-api-key`.**
 
 ### GET /audiobooks
 
@@ -193,8 +195,6 @@ openssl rand -base64 16 # for api key
 ### POST /login
 
 This endpoint allows you to recuperate a user's api key using a username and password. You will need this api key for all other connections with the database.
-
-For authentification you need to provide a header `Auth: your-api-key`.
 
 ## License
 
