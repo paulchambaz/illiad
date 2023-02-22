@@ -5,6 +5,8 @@ use std::fs;
 use std::path::{Path, PathBuf};
 use toml;
 
+use chrono;
+
 use crate::models::account;
 use crate::models::audiobook;
 use crate::models::position;
@@ -69,7 +71,8 @@ pub async fn create_positions(pool: &sqlx::Pool<sqlx::Sqlite>) -> Result<(), sql
         hash TEXT,
         user TEXT,
         file TEXT,
-        position NUMBER)"#,
+        position NUMBER, 
+        last_modified DATE)"#,
     )
     .execute(pool)
     .await
@@ -162,13 +165,18 @@ pub async fn insert_position(
     pool: &sqlx::Pool<sqlx::Sqlite>,
 ) -> Result<(), sqlx::Error> {
     // updating positions for the ones that already exist
+
+    let now = chrono::Local::now();
+    let iso_date_time = now.to_rcf3339();
+
     sqlx::query(
         r#"UPDATE positions
-        SET file = ?, position = ?
+        SET file = ?, position = ?, last_modified = ?
         WHERE hash = ? AND user = ?"#,
     )
     .bind(file.clone())
     .bind(position.clone())
+    .bind(iso_date_time)
     .bind(hash.clone())
     .bind(user.clone())
     .execute(pool)

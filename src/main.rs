@@ -14,9 +14,9 @@ mod utils;
 // specified in the arguments - or i a config.toml
 #[rocket::main]
 async fn main() -> Result<(), rocket::Error> {
-    let pool = database::schema::create_pool("/usr/share/illiad/database.sqlite").await;
-    // let pool = database::schema::create_pool("sqlite:///usr/share/illiad/database.sqlite").await;
-    // let pool = database::schema::create_pool("sqlite://database.sqlite").await;
+    // let pool = database::schema::create_pool("/usr/share/illiad/database.sqlite").await;
+    let pool = database::schema::create_pool("database.sqlite").await;
+
     // let shared_pool = Arc::new(Mutex::new(pool));
 
     database::schema::create_accounts(&pool)
