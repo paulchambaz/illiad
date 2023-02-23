@@ -6,6 +6,7 @@ use rocket::response::Response;
 use rocket::serde::json::Json;
 use rocket::{get, post, Build, Rocket, State};
 use rocket_db_pools::sqlx;
+use std::net::IpAddr;
 
 use crate::api;
 use crate::database;
@@ -42,9 +43,14 @@ impl Fairing for AuthHeader {
     }
 }
 
-pub fn create_rocket(port: u16, pool: sqlx::Pool<sqlx::Sqlite>) -> Rocket<Build> {
+pub fn create_rocket(
+    port: u16,
+    register: bool,
+    address: IpAddr,
+    pool: sqlx::Pool<sqlx::Sqlite>,
+) -> Rocket<Build> {
     let config = rocket::Config {
-        address: std::net::Ipv4Addr::new(0, 0, 0, 0).into(),
+        address: address,
         port: port,
         ..rocket::Config::debug_default()
     };
@@ -52,14 +58,24 @@ pub fn create_rocket(port: u16, pool: sqlx::Pool<sqlx::Sqlite>) -> Rocket<Build>
         .attach(AuthHeader)
         .mount(
             "/",
-            rocket::routes![
-                get_audiobooks_route,
-                get_audiobook_route,
-                get_audiobook_position_route,
-                post_audiobook_position_route,
-                register_route,
-                login_route,
-            ],
+            if register {
+                rocket::routes![
+                    get_audiobooks_route,
+                    get_audiobook_route,
+                    get_audiobook_position_route,
+                    post_audiobook_position_route,
+                    login_route,
+                    register_route,
+                ]
+            } else {
+                rocket::routes![
+                    get_audiobooks_route,
+                    get_audiobook_route,
+                    get_audiobook_position_route,
+                    post_audiobook_position_route,
+                    login_route,
+                ]
+            },
         )
         .manage(pool)
 }
