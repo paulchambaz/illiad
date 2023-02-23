@@ -46,8 +46,8 @@ You can copy this configuration to `~/.config/illiad/illiadrc`. As the program w
 
 ```toml
 data = ""
-database = "/usr/share/illiad/database.sqlite"
-port = "15000"
+sql = "/usr/share/illiad/database.sqlite"
+port = 15000
 address = "127.0.0.1"
 register = true
 ```

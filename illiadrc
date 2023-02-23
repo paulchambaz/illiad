@@ -1,0 +1,5 @@
+data = "data"
+sql = "database.sql"
+port = 15000
+address = "127.0.0.1"
+register = true

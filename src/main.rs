@@ -84,10 +84,10 @@ async fn main() -> Result<(), rocket::Error> {
     let matches = arg_matches();
     let pool: sqlx::Pool<sqlx::Sqlite>;
     if let Some(sql) = matches.value_of("sql") {
+        // need to check that file is valid - but i think that sql does that already
         pool = database::schema::create_pool(sql).await;
     } else {
-        eprintln!("Could not parse address.");
-        std::process::exit(1);
+        pool = database::schema::create_pool("/usr/share/illiad/database.sqlite").await;
     };
     // let shared_pool = Arc::new(Mutex::new(pool));
 
@@ -104,7 +104,12 @@ async fn main() -> Result<(), rocket::Error> {
             .await
             .expect("Could not scan audiobooks");
     } else {
-        eprintln!("An error occurred!");
+        // eprintln!("Missing data directory.\nPlease add data: eitherin /etc/illiad/illiadrc, $HOME/.config/illiad/illiadrc, as an argument with -d or --data or in a config file with -c or --config.");
+        eprintln!("Missing data directory, please provide:");
+        eprintln!("  - as an argument with -d or --data");
+        eprintln!("  - in a config file with -c or --config");
+        eprintln!("  - in $HOME/etc/illiadrc");
+        eprintln!("  - in /etc/illiadrc");
         std::process::exit(1);
     }
 
