@@ -1,3 +1,4 @@
+# data = ""
 sql = "/usr/share/illiad/database.sqlite"
 port = 8080
 address = "127.0.0.1"

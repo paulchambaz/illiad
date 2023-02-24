@@ -31,7 +31,7 @@ sudo cargo make install
 You will need to install `cargo-make` to use `cargo make`, to do so, run:
 
 ```
-cargo install --force cargo-make
+sudo cargo install --force cargo-make
 ```
 
 Once that is done, you should start the program to make sure it runs without issue on your machine.
