@@ -24,11 +24,25 @@ In order to install this software, please do the following:
 ```bash
 git clone https://git.chambaz.xyz/illiad.git
 cd illiad
-sudo make install
+sudo rustup default stable
+sudo cargo make install
+```
+
+You will need to install `cargo-make` to use `cargo make`, to do so, run:
+
+```
+cargo install --force cargo-make
 ```
 
 Once that is done, you should start the program to make sure it runs without issue on your machine.
 
+To uninstall the program, you can also do:
+
+```
+sudo cargo make uninstall
+```
+
+**This will delete all configuration files and database, so be careful with it.**
 
 ## Usage
 
