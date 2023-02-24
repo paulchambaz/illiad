@@ -109,7 +109,7 @@ server {
     listen 80;
     listen [::]:80;
     location / {
-        proxy_pass http://127.0.0.1:15000;
+        proxy_pass http://127.0.0.1:8080;
     }
 }
 ```
@@ -117,7 +117,7 @@ server {
 ```bash
 nginx -t # reloads nginx
 certbot --nginx # gives https certificate
-ufw allow 15000 # if you have a firewall
+ufw allow 8080 # if you have a firewall
 ```
 
 Make sure to route your port 443 to your server on your router's firewall.
