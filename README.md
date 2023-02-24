@@ -59,9 +59,8 @@ Default configuration file is at `/etc/illiad/illiadrc`.
 You can copy this configuration to `~/.config/illiad/illiadrc`. As the program will attempt to search for the file here before reverting to the default configuration. Finally if you provice `-c config.toml`, the program will read that config. Here is a list of all default parameters.
 
 ```toml
-data = ""
 sql = "/usr/share/illiad/database.sqlite"
-port = 15000
+port = 8080
 address = "127.0.0.1"
 register = true
 ```
