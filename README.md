@@ -7,6 +7,7 @@ It allows you to store your audiobook in once place, give it metadata there and 
 With it you can download your audiobook files from your server, listen to them while keeping track of the position and share that tracking data on multiple clients.
 Please understand that this program is not indended for streaming audiobooks. It just downloads the file on your client, the client does all the managing of the files, including deleting the file from the client once you are done with it.
 This server's objective is just to centralize your collection and your position in the audiobook to you can sync them between different clients.
+This project supports accounts, so you can use it for different people.
 
 In order to use it, you need to install this software on a server, and then to install a client on the device you want to listen on.
 
