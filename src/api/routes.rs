@@ -1,18 +1,20 @@
 use rocket::fairing::{Fairing, Info, Kind};
 use rocket::http::{Header, Status};
 use rocket::request::{FromRequest, Outcome, Request};
-use rocket::response::status;
+// use rocket::response::status;
 use rocket::response::Response;
 use rocket::serde::json::Json;
-use rocket::{get, post, Build, Rocket, State};
+use rocket::{catch, get, post, Build, Rocket, State};
 use rocket_db_pools::sqlx;
 use std::net::IpAddr;
 
 use crate::api;
+use crate::api::controllers;
 use crate::database;
 use crate::models::account;
 use crate::models::audiobook;
 use crate::models::position;
+use crate::utils::error;
 
 struct AuthToken(String);
 
@@ -77,22 +79,28 @@ pub fn create_rocket(
                 ]
             },
         )
+        .register("/", rocket::catchers![not_found])
         .manage(pool)
+}
+
+#[catch(404)]
+fn not_found() -> Json<error::Answer> {
+    Json(error::not_found())
 }
 
 #[get("/audiobooks")]
 async fn get_audiobooks_route(
     pool: &State<sqlx::Pool<sqlx::Sqlite>>,
     auth_token: AuthToken,
-) -> Json<Vec<audiobook::AudiobookFmt>> {
+) -> Result<Json<audiobook::Audiobooks>, Json<error::Answer>> {
     let user = database::schema::query_user(auth_token.0, pool).await;
     match user {
         Ok(user) => user,
         Err(_) => {
-            return Json(Vec::new());
+            return Err(Json(error::cant_auth()));
         }
     };
-    api::controllers::get_audiobooks(pool).await
+    controllers::get_audiobooks(pool).await
 }
 
 #[get("/audiobook/<hash>")]
@@ -100,18 +108,15 @@ async fn get_audiobook_route(
     hash: String,
     pool: &State<sqlx::Pool<sqlx::Sqlite>>,
     auth_token: AuthToken,
-) -> Result<Vec<u8>, status::Custom<String>> {
+) -> Result<Vec<u8>, Json<error::Answer>> {
     let user = database::schema::query_user(auth_token.0, pool).await;
     match user {
         Ok(user) => user,
         Err(_) => {
-            return Err(status::Custom(
-                Status::NotFound,
-                format!("Bad authentification token"),
-            ));
+            return Err(Json(error::cant_auth()));
         }
     };
-    api::controllers::get_audiobook(hash, pool).await
+    controllers::get_audiobook(hash, pool).await
 }
 
 #[get("/audiobook/<hash>/position")]
@@ -119,15 +124,12 @@ async fn get_audiobook_position_route(
     hash: String,
     pool: &State<sqlx::Pool<sqlx::Sqlite>>,
     auth_token: AuthToken,
-) -> Json<position::Position> {
+) -> Result<Json<position::Position>, Json<error::Answer>> {
     let user = database::schema::query_user(auth_token.0, pool).await;
     let user = match user {
         Ok(user) => user,
         Err(_) => {
-            return Json(position::Position {
-                file: String::new(),
-                position: 0,
-            });
+            return Err(Json(error::cant_auth()));
         }
     };
     api::controllers::get_audiobook_position(hash, user, pool).await
@@ -143,13 +145,16 @@ async fn post_audiobook_position_route(
     pool: &State<sqlx::Pool<sqlx::Sqlite>>,
     position: Json<position::Position>,
     auth_token: AuthToken,
-) -> Json<api::controllers::Answer> {
+) -> Json<error::Answer> {
     let user = database::schema::query_user(auth_token.0, pool).await;
 
     let user = match user {
         Ok(user) => user,
         Err(_) => {
-            return Json(api::controllers::Answer { code: 1 });
+            return Json(error::Answer {
+                code: 2,
+                msg: String::from("Error, could not authenticate"),
+            });
         }
     };
     println!("{}", user);
@@ -168,7 +173,7 @@ async fn post_audiobook_position_route(
 async fn register_route(
     pool: &State<sqlx::Pool<sqlx::Sqlite>>,
     account: Json<account::NewAccount>,
-) -> String {
+) -> Result<Json<controllers::ApiKey>, Json<error::Answer>> {
     api::controllers::post_account(account.user.clone(), account.password.clone(), pool).await
 }
 
@@ -176,6 +181,6 @@ async fn register_route(
 async fn login_route(
     pool: &State<sqlx::Pool<sqlx::Sqlite>>,
     account: Json<account::NewAccount>,
-) -> String {
+) -> Result<Json<controllers::ApiKey>, Json<error::Answer>> {
     api::controllers::get_account(account.user.clone(), account.password.clone(), pool).await
 }

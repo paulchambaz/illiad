@@ -9,6 +9,11 @@ pub struct Audiobook {
 }
 
 #[derive(Serialize)]
+pub struct Audiobooks {
+    pub audiobooks: Vec<AudiobookFmt>,
+}
+
+#[derive(Serialize)]
 pub struct AudiobookFmt {
     pub hash: String,
     pub title: String,

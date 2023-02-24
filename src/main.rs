@@ -15,17 +15,29 @@ async fn main() -> Result<(), rocket::Error> {
     let pool = database::schema::create_pool(config.sql).await;
     // let shared_pool = Arc::new(Mutex::new(pool));
 
-    database::schema::create_accounts(&pool)
-        .await
-        .expect("Could not create accounts");
+    match database::schema::create_accounts(&pool).await {
+        Ok(_) => {}
+        Err(_) => {
+            eprintln!("Could not create account");
+            std::process::exit(1);
+        }
+    };
 
-    database::schema::create_positions(&pool)
-        .await
-        .expect("Could not create positions");
+    match database::schema::create_positions(&pool).await {
+        Ok(_) => {}
+        Err(_) => {
+            eprintln!("Could not create positions");
+            std::process::exit(1);
+        }
+    };
 
-    database::schema::scan_audiobooks(&config.data, &pool)
-        .await
-        .expect("Could not scan audiobooks");
+    match database::schema::scan_audiobooks(&config.data, &pool).await {
+        Ok(_) => {}
+        Err(_) => {
+            eprintln!("Could not create positions");
+            std::process::exit(1);
+        }
+    };
 
     let rocket =
         api::routes::create_rocket(config.port, config.register, config.address.into(), pool);

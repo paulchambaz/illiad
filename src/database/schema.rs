@@ -43,7 +43,7 @@ pub async fn scan_audiobooks(
     dir: &PathBuf,
     pool: &sqlx::Pool<sqlx::Sqlite>,
 ) -> Result<(), sqlx::Error> {
-    sqlx::query(
+    match sqlx::query(
         r#"CREATE TABLE IF NOT EXISTS audiobooks (
     hash TEXT PRIMARY KEY,
     title TEXT,
@@ -52,21 +52,29 @@ pub async fn scan_audiobooks(
     )
     .execute(pool)
     .await
-    .expect("Could not create the database.");
+    {
+        Ok(_) => {}
+        Err(err) => {
+            return Err(err);
+        }
+    };
 
     let audiobooks = scan_audiobook_direcories(Path::new(dir));
 
     for audiobook in audiobooks {
-        let _ = insert_audiobook(audiobook, pool)
-            .await
-            .expect("Could not insert audiobook into the database");
+        match insert_audiobook(audiobook, pool).await {
+            Ok(_) => {}
+            Err(err) => {
+                return Err(err);
+            }
+        };
     }
 
     Ok(())
 }
 
 pub async fn create_positions(pool: &sqlx::Pool<sqlx::Sqlite>) -> Result<(), sqlx::Error> {
-    sqlx::query(
+    match sqlx::query(
         r#"CREATE TABLE IF NOT EXISTS positions (
         hash TEXT,
         user TEXT,
@@ -76,12 +84,18 @@ pub async fn create_positions(pool: &sqlx::Pool<sqlx::Sqlite>) -> Result<(), sql
     )
     .execute(pool)
     .await
-    .expect("Could not create the database.");
+    {
+        Ok(_) => {}
+        Err(err) => {
+            return Err(err);
+        }
+    }
+
     Ok(())
 }
 
 pub async fn create_accounts(pool: &sqlx::Pool<sqlx::Sqlite>) -> Result<(), sqlx::Error> {
-    sqlx::query(
+    match sqlx::query(
         r#"CREATE TABLE IF NOT EXISTS accounts (
         user TEXT PRIMARY KEY,
         password TEXT,
@@ -89,14 +103,20 @@ pub async fn create_accounts(pool: &sqlx::Pool<sqlx::Sqlite>) -> Result<(), sqlx
     )
     .execute(pool)
     .await
-    .expect("Could not create the database.");
+    {
+        Ok(_) => {}
+        Err(err) => {
+            return Err(err);
+        }
+    }
+
     Ok(())
 }
 
 /// queries a list of all audiobooks
 pub async fn query_audiobooks(
     pool: &sqlx::Pool<sqlx::Sqlite>,
-) -> Result<Vec<audiobook::AudiobookFmt>, sqlx::Error> {
+) -> Result<audiobook::Audiobooks, sqlx::Error> {
     let rows =
         sqlx::query_as::<_, AudiobookFmtRow>(r#"SELECT hash, title, author FROM audiobooks"#)
             .fetch_all(pool)
@@ -111,7 +131,9 @@ pub async fn query_audiobooks(
         })
         .collect();
 
-    Ok(audiobooks)
+    Ok(audiobook::Audiobooks {
+        audiobooks: audiobooks,
+    })
 }
 
 pub async fn query_audiobook(
@@ -128,10 +150,17 @@ pub async fn query_audiobook(
 }
 
 pub async fn create_pool(address: PathBuf) -> sqlx::Pool<sqlx::Sqlite> {
-    println!("{:?}", address);
-    sqlx::SqlitePool::connect_with(sqlx::sqlite::SqliteConnectOptions::new().filename(address))
-        .await
-        .expect("Could not connect to sqlite database")
+    match sqlx::SqlitePool::connect_with(
+        sqlx::sqlite::SqliteConnectOptions::new().filename(address),
+    )
+    .await
+    {
+        Ok(pool) => pool,
+        Err(err) => {
+            eprintln!("{:?}", err);
+            std::process::exit(1);
+        }
+    }
 }
 
 pub async fn insert_audiobook(
@@ -143,7 +172,7 @@ pub async fn insert_audiobook(
     let author = audiobook.author;
     let path = audiobook.path;
 
-    sqlx::query(
+    match sqlx::query(
         r#"INSERT OR REPLACE INTO audiobooks (hash, title, author, path)
         VALUES (?, ?, ?, ?)"#,
     )
@@ -153,7 +182,12 @@ pub async fn insert_audiobook(
     .bind(path)
     .execute(pool)
     .await
-    .expect("Could not insert into the database.");
+    {
+        Ok(_) => {}
+        Err(err) => {
+            return Err(err);
+        }
+    };
 
     Ok(())
 }
@@ -170,7 +204,7 @@ pub async fn insert_position(
     // let now = chrono::Local::now();
     // let iso_date_time = now.to_rcf3339();
 
-    sqlx::query(
+    match sqlx::query(
         r#"UPDATE positions
         SET file = ?, position = ?
         WHERE hash = ? AND user = ?"#,
@@ -182,8 +216,13 @@ pub async fn insert_position(
     .bind(user.clone())
     .execute(pool)
     .await
-    .expect("Could not update position into the database.");
-    sqlx::query(
+    {
+        Ok(_) => {}
+        Err(err) => {
+            return Err(err);
+        }
+    };
+    match sqlx::query(
         r#"INSERT INTO positions (hash, user, file, position)
         SELECT ?, ?, ?, ?
         WHERE NOT EXISTS (
@@ -197,7 +236,12 @@ pub async fn insert_position(
     .bind(user.clone())
     .execute(pool)
     .await
-    .expect("Could not insert position into the database.");
+    {
+        Ok(_) => {}
+        Err(err) => {
+            return Err(err);
+        }
+    };
     // add new rows when a user has never had information about a book
     Ok(())
 }
@@ -206,7 +250,7 @@ pub async fn select_position(
     user: String,
     pool: &sqlx::Pool<sqlx::Sqlite>,
 ) -> Result<position::Position, sqlx::Error> {
-    let rows = sqlx::query_as::<_, PositionPathRow>(
+    let rows = match sqlx::query_as::<_, PositionPathRow>(
         r#"SELECT file, position FROM positions
         WHERE hash = ? AND user = ?"#,
     )
@@ -214,7 +258,12 @@ pub async fn select_position(
     .bind(user)
     .fetch_one(pool)
     .await
-    .expect("Could not select position from the database.");
+    {
+        Ok(rows) => rows,
+        Err(err) => {
+            return Err(err);
+        }
+    };
 
     let position = position::Position {
         file: rows.file,
@@ -231,7 +280,7 @@ pub async fn insert_user(
 ) -> Result<String, sqlx::Error> {
     let key = account::generate_key();
 
-    sqlx::query(
+    match sqlx::query(
         r#"INSERT INTO accounts (user, password, key)
         VALUES (?, ?, ?)"#,
     )
@@ -240,7 +289,12 @@ pub async fn insert_user(
     .bind(key.clone())
     .execute(pool)
     .await
-    .expect("Could not insert into the database.");
+    {
+        Ok(_) => {}
+        Err(err) => {
+            return Err(err);
+        }
+    };
 
     Ok(key)
 }
@@ -250,7 +304,7 @@ pub async fn select_user(
     password: String,
     pool: &sqlx::Pool<sqlx::Sqlite>,
 ) -> Result<String, sqlx::Error> {
-    let row = sqlx::query_as::<_, KeyRow>(
+    let row = match sqlx::query_as::<_, KeyRow>(
         r#"SELECT key FROM accounts
         WHERE user = ? AND password = ?"#,
     )
@@ -258,7 +312,12 @@ pub async fn select_user(
     .bind(password)
     .fetch_one(pool)
     .await
-    .expect("Could not find key from user and password.");
+    {
+        Ok(row) => row,
+        Err(err) => {
+            return Err(err);
+        }
+    };
     Ok(row.key)
 }
 
@@ -266,14 +325,19 @@ pub async fn query_user(
     key: String,
     pool: &sqlx::Pool<sqlx::Sqlite>,
 ) -> Result<String, sqlx::Error> {
-    let row = sqlx::query_as::<_, UserRow>(
+    let row = match sqlx::query_as::<_, UserRow>(
         r#"SELECT user FROM accounts
         WHERE key = ?"#,
     )
     .bind(key)
     .fetch_one(pool)
     .await
-    .expect("Could not find user from key.");
+    {
+        Ok(row) => row,
+        Err(err) => {
+            return Err(err);
+        }
+    };
 
     Ok(row.user)
 }
