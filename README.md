@@ -125,7 +125,7 @@ Make sure to route your port 443 to your server on your router's firewall.
 
 This will allow you to query 'https://illiad.your-domain-name.com/audiobooks' from anywhere.
 
-## Organization
+## Organisation
 
 This program does not manage anything in regards to the book organisation. That said there are a couple that you need to know to be able for the program to detect your books. First, at the root of every directory that there is an audiobook in, you should include a info.toml. Here's an example:
 
@@ -139,18 +139,21 @@ Please note that I have created a simple format that you may want to follow for 
 ```toml
 title = "The Ancient City"
 author = "Fustel de Coulanges"
+date = "1864"
 
-[0]
-file = "01.ogg"
-name = "Introduction -  Necessity of Studying the Oldest Beliefs of the Ancients"
+[chapters]
 
-[1]
-file = "02.ogg"
-name = "Book 1 Chapter 1 - Notions About the Soul & Death"
+    [chapters.0]
+    file = "01.ogg"
+    name = "Introduction -  Necessity of Studying the Oldest Beliefs of the Ancients"
 
-[2]
-file = "03.ogg"
-name = "Book 1 Chapter 2 - The Worship of the Dead"
+    [chapters.1]
+    file = "02.ogg"
+    name = "Book 1 Chapter 1 - Notions About the Soul & Death"
+
+    [chapters.2]
+    file = "03.ogg"
+    name = "Book 1 Chapter 2 - The Worship of the Dead"
 ```
 
 Although this structure is completely up to you, this is the pattern that I use for odyssey, a client I wrote for this program. If you use another client, you should check how they want to organize your files, but this is what I recommend.
