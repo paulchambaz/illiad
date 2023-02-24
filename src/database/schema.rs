@@ -40,7 +40,7 @@ struct KeyRow {
 }
 
 pub async fn scan_audiobooks(
-    dir: &Path,
+    dir: &PathBuf,
     pool: &sqlx::Pool<sqlx::Sqlite>,
 ) -> Result<(), sqlx::Error> {
     sqlx::query(
@@ -54,7 +54,7 @@ pub async fn scan_audiobooks(
     .await
     .expect("Could not create the database.");
 
-    let audiobooks = scan_audiobook_direcories(dir);
+    let audiobooks = scan_audiobook_direcories(Path::new(dir));
 
     for audiobook in audiobooks {
         let _ = insert_audiobook(audiobook, pool)
@@ -127,7 +127,8 @@ pub async fn query_audiobook(
     Ok(row.path)
 }
 
-pub async fn create_pool(address: &str) -> sqlx::Pool<sqlx::Sqlite> {
+pub async fn create_pool(address: PathBuf) -> sqlx::Pool<sqlx::Sqlite> {
+    println!("{:?}", address);
     sqlx::SqlitePool::connect_with(sqlx::sqlite::SqliteConnectOptions::new().filename(address))
         .await
         .expect("Could not connect to sqlite database")
